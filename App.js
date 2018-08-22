@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { viroKey } from './config'
+import { viroKey } from './config';
 import {
   AppRegistry,
   ActivityIndicator,
