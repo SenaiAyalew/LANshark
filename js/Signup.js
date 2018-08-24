@@ -99,7 +99,7 @@ export default class Signup extends Component {
       data: this.state,
     })
       .then((response) => {
-        // console.warn('response', response);
+        console.warn('response', response);
         this.props._logIn();
       })
       .catch((error) => {
