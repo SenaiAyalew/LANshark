@@ -2,6 +2,7 @@ const axios = require('axios');
 const fetch = require('node-fetch');
 const scrapeIt = require('scrape-it');
 const db = require('./database-mySql/dbHelpers.js');
+require('dotenv').config();
 /**
  * format and parse the string from html
  * @param {String} text the string to format
@@ -40,6 +41,7 @@ exports.formatResults = (text) => {
   });
   return results;
 };
+
 /**
  * get neighborhood at a current location
  * @param {String} lat the latitude of the current location
@@ -74,6 +76,7 @@ exports.getNeighborhood = (lat, long) => {
     headers,
   });
 };
+
 /**
  * formats the data received from the wikidata API call
  * @param {String} json the json formatted results from the query
@@ -104,7 +107,7 @@ exports.formatNeighborhoodData = ((json) => {
     let wideWiki = '';
     let narrowWiki = '';
     let wikiImage = '';
-  
+
     // check for instance of label
     if (currPlace.instance_ofLabel !== undefined) {
       type = currPlace.instance_ofLabel.value;
@@ -138,6 +141,7 @@ exports.formatNeighborhoodData = ((json) => {
   });
   return places;
 });
+
 /**
  * gets a full page parsed by scrapeIt
  * @param {String} lat the latitude of the current location
@@ -152,6 +156,7 @@ exports.getFullPage = (pagetitle) => {
     paragraph: 'p',
   });
 };
+
 /**
  * Retrieves the neighboorhood map using a wikipedia Sparql query currently not being used
  * get neighborhood map at a current location
@@ -183,6 +188,7 @@ exports.getNeighborhoodMap = (lat, long) => {
     headers,
   });
 };
+
 /**
  * search for wikipedia article using generator search
  * gets the closest full article
@@ -199,9 +205,9 @@ exports.getPOINarrow = (lat, long) => axios.get(`https://en.wikipedia.org/w/api.
  * @param {String} lat the latitude of the current location
  * @param {String} long the longitude of the current location
  * @returns {function} the axios get request for mapquest
+ * https://www.mapquestapi.com/geocoding/v1/reverse?key=ltRCsaZ5plzozbdFqEmQ3skrHufmSx76&location=29.97616921%2C-90.0764381&outFormat=json&thumbMaps=false
  */
-exports.getAddress = (lat, long) => axios.get(`https://www.mapquestapi.com/geocoding/v1/reverse?key=${process.env.MAPQUESTKEY}&location=${lat}%2C${long}&outFormat=json&thumbMaps=false`);
-// https://en.wikipedia.org/w/api.php?action=query&format=json&list=search&srsearch=1403+Washington+Ave
+exports.getAddress = (lat, long) => axios.get(`https://us1.locationiq.com/v1/reverse.php?key=${process.env.LOCIQ}&lat=${lat}&lon=${long}&format=json`);
 
 
 /**
@@ -214,7 +220,7 @@ exports.searchByAddress = (address) => {
   return axios.get(`https://en.wikipedia.org/w/api.php?action=query&format=json&list=search&srsearch=${add}+New+Orleans`);
 };
 
-exports.searchHnoc = searchString => db.hnocSearch(searchString);
+// exports.searchHnoc = searchString => db.hnocSearch(searchString);
 /**
  * gets a search results from wikipedia by title
  * @param {String} titleInput the title to search
@@ -229,31 +235,10 @@ exports.searchByTitle = (titleInput) => {
 //   USER RELATED FUNCTIONS                //
 // //////////////////////////////////////////
 
-exports.loginUser = (user) => {
-  console.log('login user helper fired');
-
-  // the below works but this isn't really the proper place for it
-  // possible shift to findAndUPdate or something similar
-  return db.findUser(user.body);
-};
-
-// Create a new user
-exports.createUser = (user, response, reject) => {
-  console.log('create user helper fired', user);
-  return db.createUser(user, sequelize);
-};
-
 // addToUserFavorites
-exports.addToFavorites = (favorite) => {
-  // console.log('addToUserFavorites');
-  // const favorite = favorite
-  return db.addToUserFavorites(favorite);
-};
+exports.addToFavorites = favorite => db.addToUserFavorites(favorite);
 
-exports.getAllUserFavorites = (user) => {
-  console.log('helpers get all user favorites');
-  return db.findUserFavorites(user.id);
-};
+exports.getAllUserFavorites = user => db.findUserFavorites(user.id);
 
 // ///////////////////////////////////////////////////////
 // END OF USER RELATED FUNCTIONS                       //
@@ -261,16 +246,13 @@ exports.getAllUserFavorites = (user) => {
 
 // Create data helpers
 exports.neighborhoodCreate = (neighborhood) => {
-  console.log('neighborhoodCreate');
   db.createNeighborhood(neighborhood);
 };
 
 exports.poiCreate = (poi) => {
-  console.log('poiCreate');
   db.createPoi(poi);
 };
 
 exports.vcsCreate = (vcsInfo) => {
-  console.log('vieux carre address entry create fired');
   db.createVcs(vcsInfo);
 };

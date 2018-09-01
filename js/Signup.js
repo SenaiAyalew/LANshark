@@ -1,3 +1,8 @@
+/* eslint-disable import/no-cycle */
+/* eslint-disable no-alert */
+/* eslint-disable no-undef */
+
+
 import React, { Component } from 'react';
 import {
   StyleSheet,
@@ -27,11 +32,9 @@ const styles = StyleSheet.create({
   },
   textinput: {
     backgroundColor: 'white',
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: 'black',
+    fontSize: 22,
     alignSelf: 'stretch',
-    height: 50,
+    height: 53,
     marginBottom: 20,
     borderBottomColor: '#f8f8f8',
     borderBottomWidth: 1,
@@ -64,17 +67,15 @@ export default class Signup extends Component {
     super(props);
 
     this.state = {
-      username: '',
       email: '',
       password: '',
       loginPage: false,
       signupPage: true,
-      userId: null,
     };
 
     this._loginPage = this._loginPage.bind(this);
     this._signup = this._signup.bind(this);
-    this._submit = this._submit.bind(this);
+    this._signin = this._signin.bind(this);
   }
 
 
@@ -92,20 +93,23 @@ export default class Signup extends Component {
     });
   }
 
-  _submit() {
+  _signin() {
     const deployedServer = 'http://ec2-54-152-18-28.compute-1.amazonaws.com/signup';
+
     axios({
       method: 'post',
       url: deployedServer,
       data: {
-        username: this.state.username,
         email: this.state.email,
         password: this.state.password,
       },
     })
       .then((response) => {
-        if (response.data === true) {
-          this.props._logIn();
+        if (typeof response.data === 'object') {
+          this.props.user.id = response.data.id;
+          this.props._arView();
+        } else if (response.data === 'User not created') {
+          alert(`Sorry ${this.state.email}, something went wrong. Please try again.`);
         } else {
           alert(`Sorry ${this.state.email}, this email is Already registered. Try login.`);
         }
@@ -119,25 +123,33 @@ export default class Signup extends Component {
     return (
       <View style={styles.login}>
         {renderIf(this.state.signupPage && !this.state.loginPage,
-        <View>
-        <Text style={styles.header}>Welcome to AR History Tour</Text>
+          <View>
+            <Text style={styles.header}>Welcome to AR History Tour</Text>
 
-        <TextInput style={styles.textinput} placeholder="   Username" onChangeText={(text) => this.setState({username: text})} />
+            <TextInput
+              style={styles.textinput}
+              placeholder="   Email"
+              onChangeText={text => this.setState({ email: text })}
+            />
+            <TextInput style={styles.textinput} placeholder="   Password" secureTextEntry onChangeText={text => this.setState({ password: text })} />
 
-        <TextInput style={styles.textinput} placeholder="   Email" onChangeText={(text) => this.setState({email: text})}/>
+            <TouchableOpacity
+              style={styles.signupbutton}
+              onPress={() => { this._signin(); }}
+            >
+              <Text style={styles.btntext}>Sign Up</Text>
+            </TouchableOpacity>
 
-        <TextInput style={styles.textinput} placeholder="   Password" secureTextEntry={true} onChangeText={(text) => this.setState({password: text})} />
-
-        <TouchableOpacity style={styles.signupbutton} onPress={() => { this._submit() }}>
-          <Text style={styles.btntext}>Sign Up</Text>
-        </TouchableOpacity>
-
-          <Text style={styles.logintext} onPress={() => { this._loginPage(); }}>Login Here</Text>
-        </View>,)}
+            <Text style={styles.logintext} onPress={() => { this._loginPage(); }}>Login Here</Text>
+          </View>)}
         {renderIf(!this.state.signupPage && this.state.loginPage,
           <View>
-          <Login arView={this.props._logIn} signup={this.props._signup} userId={this.props.userId} user={this.props.user}/>
-        </View>)}
+            <Login
+              arView={this.props._arView}
+              signup={this.props._signup}
+              user={this.props.user}
+            />
+          </View>)}
       </View>
     );
   }
